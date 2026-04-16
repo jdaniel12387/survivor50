@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Survivor 50 — Rachel vs Jeremy</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --torch-dark: #B84A0D;
+    --gold: #C9A84C;
+    --gold-light: #E8C97A;
+    --sand-dark: #D4C4A0;
+    --jungle-light: #3D6B3D;
+    --rachel-color: #7B5EA7;
+    --rachel-light: #EDE8F5;
+    --rachel-mid: #B09DC8;
+    --jeremy-color: #2970B8;
+    --jeremy-light: #E3EEF9;
+    --jeremy-mid: #7AAAD8;
+    --text: #2C1F0A;
+    --muted: #7A6B52;
+    --card-bg: rgba(242,232,213,0.92);
+    --border: rgba(139,110,70,0.3);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Crimson Text', Georgia, serif;
+    background: #1A2A1A;
+    min-height: 100vh;
+    color: var(--text);
+    position: relative;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 20% 0%, rgba(45,74,45,0.9) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 0%, rgba(45,74,45,0.9) 0%, transparent 60%),
+      radial-gradient(ellipse at 50% 100%, rgba(26,18,8,0.95) 0%, transparent 70%),
+      linear-gradient(180deg, #0D1A0D 0%, #1A2A1A 30%, #2D3D1A 60%, #1A1208 100%);
+    z-index: 0;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(1px 1px at 15% 20%, rgba(232,193,122,0.6) 0%, transparent 100%),
+      radial-gradient(1px 1px at 35% 10%, rgba(232,193,122,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 55% 15%, rgba(232,193,122,0.5) 0%, transparent 100%),
+      radial-gradient(2px 2px at 25% 5%, rgba(255,220,100,0.8) 0%, transparent 100%),
+      radial-gradient(2px 2px at 65% 12%, rgba(255,220,100,0.7) 0%, transparent 100%);
+    z-index: 0;
+    pointer-events: none;
+  }
+  .container { position: relative; z-index: 1; max-width: 960px; margin: 0 auto; padding: 0 16px 60px; }
+  .site-header { text-align: center; padding: 40px 0 32px; position: relative; }
+  .torch-left, .torch-right { position: absolute; top: 20px; font-size: 36px; animation: flicker 2s ease-in-out infinite alternate; }
+  .torch-left { left: 0; animation-delay: 0.3s; }
+  .torch-right { right: 0; animation-delay: 0.7s; }
+  @keyframes flicker {
+    0% { opacity: 0.8; transform: scale(1) rotate(-2deg); }
+    100% { opacity: 1; transform: scale(1.05) rotate(2deg); }
+  }
+  .season-label { font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 4px; color: var(--gold); text-transform: uppercase; margin-bottom: 8px; }
+  .main-title { font-family: 'Cinzel', serif; font-size: 48px; font-weight: 700; color: var(--gold-light); text-shadow: 0 0 40px rgba(200,160,60,0.5), 2px 2px 0 rgba(0,0,0,0.8); line-height: 1; margin-bottom: 6px; }
+  .subtitle { font-family: 'Cinzel', serif; font-size: 14px; color: var(--sand-dark); letter-spacing: 2px; }
+  .divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; }
+  .divider-line { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+  .divider-icon { color: var(--gold); font-size: 18px; }
+  .scores-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: center; margin-bottom: 24px; }
+  .score-card { background: var(--card-bg); border-radius: 12px; padding: 18px 20px; border: 1px solid var(--border); box-shadow: 0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.3); position: relative; overflow: hidden; }
+  .score-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+  .score-card.rachel::before { background: linear-gradient(90deg, var(--rachel-color), var(--rachel-mid)); }
+  .score-card.jeremy::before { background: linear-gradient(90deg, var(--jeremy-mid), var(--jeremy-color)); }
+  .score-player { font-family: 'Cinzel', serif; font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+  .score-card.rachel .score-player { color: var(--rachel-color); }
+  .score-card.jeremy .score-player { color: var(--jeremy-color); }
+  .score-circles { font-family: 'Cinzel', serif; font-size: 36px; font-weight: 700; color: var(--text); line-height: 1; }
+  .score-circles span { font-size: 14px; font-weight: 400; color: var(--muted); font-family: 'Crimson Text', serif; }
+  .score-meta { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .vs-badge { font-family: 'Cinzel', serif; font-size: 20px; font-weight: 700; color: var(--gold); text-align: center; text-shadow: 0 0 20px rgba(200,160,60,0.6); }
+  .section { background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.3); margin-bottom: 20px; overflow: hidden; }
+  .section-header { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: rgba(200,160,60,0.08); }
+  .section-title { font-family: 'Cinzel', serif; font-size: 14px; font-weight: 600; color: var(--torch-dark); letter-spacing: 1px; text-transform: uppercase; }
+  .teams-grid { display: grid; grid-template-columns: 1fr 1fr; }
+  .team-col { border-right: 1px solid var(--border); }
+  .team-col:last-child { border-right: none; }
+  .team-header { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.04); }
+  .team-name { font-family: 'Cinzel', serif; font-size: 13px; font-weight: 600; }
+  .team-col.rachel .team-name { color: var(--rachel-color); }
+  .team-col.jeremy .team-name { color: var(--jeremy-color); }
+  .alive-badge { font-size: 11px; padding: 2px 8px; border-radius: 99px; font-family: 'Cinzel', serif; }
+  .team-col.rachel .alive-badge { background: var(--rachel-light); color: var(--rachel-color); }
+  .team-col.jeremy .alive-badge { background: var(--jeremy-light); color: var(--jeremy-color); }
+  .contestant-row { display: flex; align-items: center; gap: 10px; padding: 9px 16px; border-bottom: 1px solid rgba(139,110,70,0.15); transition: background 0.15s; }
+  .contestant-row:last-child { border-bottom: none; }
+  .contestant-row:hover { background: rgba(200,160,60,0.08); }
+  .contestant-row.eliminated { opacity: 0.45; }
+  .contestant-row.eliminated .cname { text-decoration: line-through; color: var(--muted); }
+  .tribe-dot { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-family: 'Cinzel', serif; font-weight: 600; flex-shrink: 0; border: 1.5px solid rgba(0,0,0,0.1); }
+  .tribe-O { background: #F5A623; color: #7A4800; }
+  .tribe-P { background: #D4558A; color: #fff; }
+  .tribe-B { background: #4A90D9; color: #fff; }
+  .cname { font-size: 15px; color: var(--text); flex: 1; }
+  .voted-tag { font-size: 9px; padding: 2px 6px; border-radius: 4px; background: rgba(180,50,30,0.12); color: #8B2010; font-family: 'Cinzel', serif; letter-spacing: 0.5px; }
+  .elim-btn { font-size: 10px; padding: 3px 9px; border-radius: 6px; cursor: pointer; font-family: 'Cinzel', serif; border: 1px solid; transition: all 0.15s; flex-shrink: 0; }
+  .elim-btn.do-elim { background: transparent; color: #8B2010; border-color: rgba(139,32,16,0.3); }
+  .elim-btn.do-elim:hover { background: rgba(180,50,30,0.1); }
+  .elim-btn.do-restore { background: transparent; color: var(--jungle-light); border-color: rgba(61,107,61,0.4); }
+  .elim-btn.do-restore:hover { background: rgba(61,107,61,0.1); }
+  .bonus-list { padding: 4px 0; }
+  .bonus-row { display: flex; align-items: center; gap: 10px; padding: 10px 20px; border-bottom: 1px solid rgba(139,110,70,0.15); }
+  .bonus-row:last-child { border-bottom: none; }
+  .bonus-desc { font-size: 14px; color: var(--text); flex: 1; }
+  .circle-pill { font-family: 'Cinzel', serif; font-size: 10px; font-weight: 600; padding: 3px 10px; border-radius: 99px; background: rgba(200,160,60,0.15); color: var(--torch-dark); border: 1px solid rgba(200,160,60,0.4); white-space: nowrap; flex-shrink: 0; }
+  .bonus-btns { display: flex; gap: 6px; flex-shrink: 0; }
+  .award-btn { font-size: 10px; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-family: 'Cinzel', serif; border: 1px solid; transition: all 0.15s; }
+  .award-btn.r { background: var(--rachel-light); color: var(--rachel-color); border-color: var(--rachel-mid); }
+  .award-btn.r:hover { background: var(--rachel-mid); color: #fff; }
+  .award-btn.j { background: var(--jeremy-light); color: var(--jeremy-color); border-color: var(--jeremy-mid); }
+  .award-btn.j:hover { background: var(--jeremy-mid); color: #fff; }
+  .award-btn.awarded-Rachel { background: var(--rachel-color); color: #fff; border-color: var(--rachel-color); cursor: default; }
+  .award-btn.awarded-Jeremy { background: var(--jeremy-color); color: #fff; border-color: var(--jeremy-color); cursor: default; }
+  .undo-btn { font-size: 10px; padding: 3px 8px; border-radius: 6px; cursor: pointer; border: 1px solid rgba(139,110,70,0.3); background: transparent; color: var(--muted); font-family: 'Cinzel', serif; }
+  .undo-btn:hover { color: #8B2010; border-color: rgba(139,32,16,0.4); }
+
+  /* PRIZES */
+  .prizes-note { padding: 10px 20px; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.03); font-size: 13px; color: var(--muted); }
+  .prizes-note strong { color: var(--torch-dark); font-family: 'Cinzel', serif; font-size: 12px; }
+  .prizes-grid { display: grid; grid-template-columns: 1fr 1fr; }
+  .prize-item { display: flex; align-items: center; gap: 10px; padding: 11px 16px; border-bottom: 1px solid rgba(139,110,70,0.15); transition: background 0.12s; }
+  .prize-item:nth-child(odd) { border-right: 1px solid rgba(139,110,70,0.2); }
+  .prize-item.by-Rachel { background: var(--rachel-light); }
+  .prize-item.by-Jeremy { background: var(--jeremy-light); }
+  .prize-info { flex: 1; min-width: 0; }
+  .prize-name { font-size: 14px; color: var(--text); display: block; }
+  .prize-item.by-Rachel .prize-name { color: var(--rachel-color); font-weight: 600; }
+  .prize-item.by-Jeremy .prize-name { color: var(--jeremy-color); font-weight: 600; }
+  .prize-qty { font-size: 11px; color: var(--muted); font-family: 'Cinzel', serif; }
+  .prize-item.by-Rachel .prize-qty { color: var(--rachel-mid); }
+  .prize-item.by-Jeremy .prize-qty { color: var(--jeremy-mid); }
+  .prize-btns { display: flex; gap: 4px; flex-shrink: 0; }
+  .pclaim-btn { font-size: 10px; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-family: 'Cinzel', serif; border: 1px solid; transition: all 0.15s; }
+  .pclaim-btn.pr { background: var(--rachel-light); color: var(--rachel-color); border-color: var(--rachel-mid); }
+  .pclaim-btn.pr:hover:not(:disabled) { background: var(--rachel-color); color: #fff; }
+  .pclaim-btn.pj { background: var(--jeremy-light); color: var(--jeremy-color); border-color: var(--jeremy-mid); }
+  .pclaim-btn.pj:hover:not(:disabled) { background: var(--jeremy-color); color: #fff; }
+  .pclaim-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .legend-row { display: flex; gap: 16px; padding: 10px 20px; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.03); }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+  .legend-swatch { width: 14px; height: 14px; border-radius: 3px; }
+  .swatch-r { background: var(--rachel-light); border: 1px solid var(--rachel-mid); }
+  .swatch-j { background: var(--jeremy-light); border: 1px solid var(--jeremy-mid); }
+  .swatch-open { background: rgba(242,232,213,0.5); border: 1px solid var(--border); }
+
+  .modal-overlay { position: fixed; inset: 0; background: rgba(10,8,3,0.75); display: none; align-items: center; justify-content: center; z-index: 999; backdrop-filter: blur(2px); }
+  .modal-overlay.open { display: flex; }
+  .modal-box { background: #F2E8D5; border-radius: 14px; border: 1px solid var(--gold); padding: 28px; max-width: 340px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.6); text-align: center; }
+  .modal-icon { font-size: 32px; margin-bottom: 12px; }
+  .modal-title { font-family: 'Cinzel', serif; font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+  .modal-body { font-size: 14px; color: var(--muted); margin-bottom: 20px; line-height: 1.5; }
+  .modal-btns { display: flex; gap: 10px; }
+  .modal-btns button { flex: 1; padding: 10px; border-radius: 8px; cursor: pointer; font-family: 'Cinzel', serif; font-size: 12px; border: 1px solid; transition: all 0.15s; }
+  .btn-cancel { background: transparent; color: var(--muted); border-color: var(--border); }
+  .btn-cancel:hover { background: rgba(0,0,0,0.05); }
+  .btn-confirm-elim { background: rgba(180,50,30,0.1); color: #8B2010; border-color: rgba(139,32,16,0.4); }
+  .btn-confirm-elim:hover { background: rgba(180,50,30,0.2); }
+  .btn-confirm-restore { background: rgba(61,107,61,0.1); color: #2D4A2D; border-color: rgba(45,74,45,0.4); }
+  .btn-confirm-restore:hover { background: rgba(61,107,61,0.2); }
+  .save-notice { position: fixed; bottom: 20px; right: 20px; background: rgba(45,74,45,0.9); color: #9FE1CB; font-family: 'Cinzel', serif; font-size: 11px; padding: 8px 16px; border-radius: 99px; border: 1px solid rgba(159,225,203,0.3); opacity: 0; transition: opacity 0.4s; z-index: 9999; pointer-events: none; }
+  .save-notice.show { opacity: 1; }
+  .tribe-legend { display: flex; gap: 12px; font-size: 11px; color: var(--muted); align-items: center; font-family: 'Cinzel', serif; }
+  .tribe-legend-item { display: flex; align-items: center; gap: 4px; }
+  .tl-dot { width: 12px; height: 12px; border-radius: 50%; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="site-header">
+    <span class="torch-left">🔥</span>
+    <span class="torch-right">🔥</span>
+    <div class="season-label">Season 50 · All-Stars</div>
+    <h1 class="main-title">SURVIVOR</h1>
+    <div class="subtitle">Rachel vs Jeremy — Draft Tracker</div>
+    <div class="divider">
+      <div class="divider-line"></div>
+      <div class="divider-icon">🌴</div>
+      <div class="divider-line"></div>
+    </div>
+  </header>
+
+  <div class="scores-row" id="scores-row"></div>
+
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">🏝 Tribal Rosters</span>
+      <div class="tribe-legend">
+        <div class="tribe-legend-item"><div class="tl-dot" style="background:#F5A623"></div>Orange</div>
+        <div class="tribe-legend-item"><div class="tl-dot" style="background:#D4558A"></div>Pink</div>
+        <div class="tribe-legend-item"><div class="tl-dot" style="background:#4A90D9"></div>Blue</div>
+      </div>
+    </div>
+    <div class="teams-grid" id="teams-grid"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><span class="section-title">⭕ Bonus Circles</span></div>
+    <div class="bonus-list" id="bonus-list"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">🏆 Prize List</span>
+    </div>
+    <div class="prizes-note">
+      <strong>1 circle = 1 prize.</strong> The number shows what you get when you claim it (e.g. "×2 Store runs" means you get 2 store runs for that 1 circle).
+    </div>
+    <div class="legend-row">
+      <div class="legend-item"><div class="legend-swatch swatch-r"></div>Rachel claimed</div>
+      <div class="legend-item"><div class="legend-swatch swatch-j"></div>Jeremy claimed</div>
+      <div class="legend-item"><div class="legend-swatch swatch-open"></div>Available</div>
+    </div>
+    <div class="prizes-grid" id="prizes-grid"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal-box">
+    <div class="modal-icon" id="modal-icon"></div>
+    <div class="modal-title" id="modal-title"></div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button id="modal-confirm">Confirm</button>
+    </div>
+  </div>
+</div>
+<div class="save-notice" id="save-notice">Saved ✓</div>
+
+<script>
+const STORAGE_KEY = 'survivor50_v3';
+
+// Each prize costs exactly 1 circle. qty = how many of that thing you receive.
+const PRIZES = [
+  {name:'Store run', qty:2},
+  {name:'Movie pick', qty:2},
+  {name:'Date night pick', qty:1},
+  {name:'Saturday breakfast', qty:2},
+  {name:'Cook dinner', qty:1},
+  {name:'Uninterrupted naps', qty:2},
+  {name:'Bath weezy', qty:1},
+  {name:'Cook dessert', qty:1},
+  {name:'HEB run', qty:1},
+  {name:'New TV show series', qty:1},
+  {name:'Massage', qty:2},
+  {name:'House errands', qty:3},
+  {name:'Clean fridges/freezers', qty:1},
+  {name:'Stove cleaning', qty:2},
+  {name:'Slave for a day', qty:1},
+  {name:'Family day outing', qty:1},
+  {name:'Family night outing', qty:1},
+  {name:'Friend night out (loser drops off)', qty:1},
+  {name:'Car detail (both cars)', qty:1},
+  {name:'Pack lunches for week', qty:1},
+  {name:'Treat budget $50', qty:1},
+  {name:'King of the remotes', qty:3},
+  {name:'Mini date (winner picks theme)', qty:1},
+  {name:'Chore swap', qty:1},
+];
+
+const DEFAULT_STATE = {
+  contestants: {
+    Rachel: [
+      {name:'Cirie',tribe:'O',out:false},{name:'Rizzo',tribe:'P',out:false},
+      {name:'Mike W',tribe:'B',out:true},{name:'Coach',tribe:'B',out:false},
+      {name:'Stephenie',tribe:'P',out:false},{name:'Angelina',tribe:'P',out:true},
+      {name:'Genevieve',tribe:'P',out:true},{name:'Dee',tribe:'B',out:false},
+      {name:'Joe',tribe:'O',out:false},{name:'Chrissy',tribe:'B',out:false},
+      {name:'Emily',tribe:'O',out:false},{name:'Tiffany',tribe:'B',out:false},
+    ],
+    Jeremy: [
+      {name:'Colby',tribe:'P',out:false},{name:'Q',tribe:'P',out:false},
+      {name:'Jenna',tribe:'O',out:false},{name:'Jonathan',tribe:'B',out:false},
+      {name:'Savannah',tribe:'O',out:true},{name:'Christian',tribe:'O',out:false},
+      {name:'Kyle F',tribe:'P',out:false},{name:'Charlie',tribe:'B',out:true},
+      {name:'Ozzy',tribe:'O',out:false},{name:'Rick',tribe:'O',out:false},
+      {name:'Aubry',tribe:'P',out:false},{name:'Kamilla',tribe:'B',out:true},
+    ]
+  },
+  bonuses: [
+    {id:'b1',desc:'1st to 3 losses (tribe color winner)',circles:3,awarded:null},
+    {id:'b2',desc:'1st with 3 majority votes',circles:3,awarded:null},
+    {id:'b3',desc:'Food challenge winner (most competitors left)',circles:2,awarded:null},
+    {id:'b4',desc:'1st player to use an immunity idol',circles:3,awarded:null},
+    {id:'b5',desc:'Gender winner (Rachel = female, Jeremy = male)',circles:2,awarded:null},
+    {id:'b6',desc:'Overall Survivor winner',circles:5,awarded:null},
+  ],
+  // prizeClaims[i] = null | 'Rachel' | 'Jeremy'
+  prizeClaims: {},
+};
+
+let state = loadState();
+let pendingAction = null;
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) return JSON.parse(saved);
+  } catch(e) {}
+  return JSON.parse(JSON.stringify(DEFAULT_STATE));
+}
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  const n = document.getElementById('save-notice');
+  n.classList.add('show');
+  setTimeout(() => n.classList.remove('show'), 1800);
+}
+
+function getCircles(player) {
+  return state.bonuses.filter(b => b.awarded === player).reduce((s,b) => s + b.circles, 0);
+}
+
+function getSpent(player) {
+  return Object.values(state.prizeClaims).filter(v => v === player).length;
+}
+
+function renderScores() {
+  const row = document.getElementById('scores-row');
+  row.innerHTML = '';
+  ['Rachel','Jeremy'].forEach((p, i) => {
+    const earned = getCircles(p);
+    const spent = getSpent(p);
+    const left = earned - spent;
+    const alive = state.contestants[p].filter(c => !c.out).length;
+    const card = document.createElement('div');
+    card.className = 'score-card ' + p.toLowerCase();
+    card.innerHTML = `
+      <div class="score-player">${p}</div>
+      <div class="score-circles">${left} <span>circles left</span></div>
+      <div class="score-meta">${earned} earned &middot; ${spent} spent &middot; ${alive} alive</div>
+    `;
+    if (i === 0) {
+      row.appendChild(card);
+      const vs = document.createElement('div');
+      vs.className = 'vs-badge';
+      vs.textContent = 'VS';
+      row.appendChild(vs);
+    } else {
+      row.appendChild(card);
+    }
+  });
+}
+
+function renderTeams() {
+  const grid = document.getElementById('teams-grid');
+  grid.innerHTML = '';
+  ['Rachel','Jeremy'].forEach(player => {
+    const col = document.createElement('div');
+    col.className = 'team-col ' + player.toLowerCase();
+    const alive = state.contestants[player].filter(c=>!c.out).length;
+    col.innerHTML = `<div class="team-header"><span class="team-name">${player}</span><span class="alive-badge">${alive} alive</span></div>`;
+    state.contestants[player].forEach((c, idx) => {
+      const row = document.createElement('div');
+      row.className = 'contestant-row' + (c.out ? ' eliminated' : '');
+      row.innerHTML = `
+        <div class="tribe-dot tribe-${c.tribe}">${c.tribe}</div>
+        <div class="cname">${c.name}</div>
+        ${c.out ? '<span class="voted-tag">OUT</span>' : ''}
+        <button class="elim-btn ${c.out ? 'do-restore' : 'do-elim'}" onclick="confirmToggle('${player}',${idx})">${c.out ? 'Restore' : 'Vote Out'}</button>
+      `;
+      col.appendChild(row);
+    });
+    grid.appendChild(col);
+  });
+}
+
+function confirmToggle(player, idx) {
+  const c = state.contestants[player][idx];
+  const eliminating = !c.out;
+  pendingAction = () => { state.contestants[player][idx].out = eliminating; saveState(); render(); };
+  document.getElementById('modal-icon').textContent = eliminating ? '🔥' : '🌿';
+  document.getElementById('modal-title').textContent = eliminating ? `Vote out ${c.name}?` : `Restore ${c.name}?`;
+  document.getElementById('modal-body').textContent = eliminating
+    ? `The tribe has spoken. Mark ${c.name} as eliminated from ${player}'s team.`
+    : `Bring ${c.name} back to ${player}'s active roster.`;
+  const btn = document.getElementById('modal-confirm');
+  btn.textContent = eliminating ? 'Vote Out' : 'Restore';
+  btn.className = eliminating ? 'btn-confirm-elim' : 'btn-confirm-restore';
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  pendingAction = null;
+}
+document.getElementById('modal-confirm').onclick = () => { if (pendingAction) pendingAction(); closeModal(); };
+document.getElementById('modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+
+function renderBonuses() {
+  const list = document.getElementById('bonus-list');
+  list.innerHTML = '';
+  state.bonuses.forEach((b, i) => {
+    const row = document.createElement('div');
+    row.className = 'bonus-row';
+    let btns = b.awarded
+      ? `<span class="award-btn awarded-${b.awarded}">${b.awarded} +${b.circles}</span><button class="undo-btn" onclick="unawardBonus(${i})">Undo</button>`
+      : `<button class="award-btn r" onclick="awardBonus(${i},'Rachel')">Rachel</button><button class="award-btn j" onclick="awardBonus(${i},'Jeremy')">Jeremy</button>`;
+    row.innerHTML = `<span class="bonus-desc">${b.desc}</span><span class="circle-pill">+${b.circles} circles</span><div class="bonus-btns">${btns}</div>`;
+    list.appendChild(row);
+  });
+}
+
+function awardBonus(i, player) { state.bonuses[i].awarded = player; saveState(); render(); }
+function unawardBonus(i) { state.bonuses[i].awarded = null; saveState(); render(); }
+
+function renderPrizes() {
+  const rLeft = getCircles('Rachel') - getSpent('Rachel');
+  const jLeft = getCircles('Jeremy') - getSpent('Jeremy');
+  const grid = document.getElementById('prizes-grid');
+  grid.innerHTML = '';
+
+  PRIZES.forEach((p, i) => {
+    const claimed = state.prizeClaims[i] || null;
+    const item = document.createElement('div');
+    item.className = 'prize-item' + (claimed ? ` by-${claimed}` : '');
+
+    const qtyLabel = p.qty > 1 ? `×${p.qty} &mdash; you get ${p.qty} of these` : 'one-time prize';
+
+    let btns = '';
+    if (claimed) {
+      btns = `<button class="undo-btn" onclick="unclaimPrize(${i})">Undo</button>`;
+    } else {
+      const rDis = rLeft < 1 ? 'disabled' : '';
+      const jDis = jLeft < 1 ? 'disabled' : '';
+      btns = `<button class="pclaim-btn pr" ${rDis} onclick="claimPrize(${i},'Rachel')">R</button>
+              <button class="pclaim-btn pj" ${jDis} onclick="claimPrize(${i},'Jeremy')">J</button>`;
+    }
+
+    item.innerHTML = `
+      <div class="prize-info">
+        <span class="prize-name">${p.name}</span>
+        <span class="prize-qty">${claimed ? 'Claimed by ' + claimed : qtyLabel}</span>
+      </div>
+      <div class="prize-btns">${btns}</div>
+    `;
+    grid.appendChild(item);
+  });
+}
+
+function claimPrize(i, player) {
+  const left = getCircles(player) - getSpent(player);
+  if (left < 1) { alert('Not enough circles!'); return; }
+  state.prizeClaims[i] = player;
+  saveState(); render();
+}
+
+function unclaimPrize(i) {
+  delete state.prizeClaims[i];
+  saveState(); render();
+}
+
+function render() { renderScores(); renderTeams(); renderBonuses(); renderPrizes(); }
+render();
+</script>
+</body>
+</html>
