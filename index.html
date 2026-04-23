@@ -127,8 +127,6 @@
   .award-btn.awarded-Jeremy { background: var(--jeremy-color); color: #fff; border-color: var(--jeremy-color); cursor: default; }
   .undo-btn { font-size: 10px; padding: 3px 8px; border-radius: 6px; cursor: pointer; border: 1px solid rgba(139,110,70,0.3); background: transparent; color: var(--muted); font-family: 'Cinzel', serif; }
   .undo-btn:hover { color: #8B2010; border-color: rgba(139,32,16,0.4); }
-
-  /* PRIZES */
   .prizes-note { padding: 10px 20px; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.03); font-size: 13px; color: var(--muted); }
   .prizes-note strong { color: var(--torch-dark); font-family: 'Cinzel', serif; font-size: 12px; }
   .prizes-grid { display: grid; grid-template-columns: 1fr 1fr; }
@@ -156,7 +154,6 @@
   .swatch-r { background: var(--rachel-light); border: 1px solid var(--rachel-mid); }
   .swatch-j { background: var(--jeremy-light); border: 1px solid var(--jeremy-mid); }
   .swatch-open { background: rgba(242,232,213,0.5); border: 1px solid var(--border); }
-
   .modal-overlay { position: fixed; inset: 0; background: rgba(10,8,3,0.75); display: none; align-items: center; justify-content: center; z-index: 999; backdrop-filter: blur(2px); }
   .modal-overlay.open { display: flex; }
   .modal-box { background: #F2E8D5; border-radius: 14px; border: 1px solid var(--gold); padding: 28px; max-width: 340px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.6); text-align: center; }
@@ -176,9 +173,20 @@
   .tribe-legend { display: flex; gap: 12px; font-size: 11px; color: var(--muted); align-items: center; font-family: 'Cinzel', serif; }
   .tribe-legend-item { display: flex; align-items: center; gap: 4px; }
   .tl-dot { width: 12px; height: 12px; border-radius: 50%; }
+  /* Connection status indicator */
+  .conn-dot { position: fixed; top: 14px; right: 16px; font-family: 'Cinzel', serif; font-size: 10px; padding: 4px 10px; border-radius: 99px; z-index: 9999; transition: all 0.3s; }
+  .conn-dot.online  { background: rgba(45,74,45,0.85); color: #9FE1CB; border: 1px solid rgba(159,225,203,0.4); }
+  .conn-dot.offline { background: rgba(139,32,16,0.85); color: #FFD0C8; border: 1px solid rgba(255,140,120,0.4); }
 </style>
 </head>
 <body>
+
+<!-- Firebase compat SDK (no build tools needed) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+<div class="conn-dot offline" id="conn-dot">⬤ Connecting…</div>
+
 <div class="container">
   <header class="site-header">
     <span class="torch-left">🔥</span>
@@ -192,9 +200,7 @@
       <div class="divider-line"></div>
     </div>
   </header>
-
   <div class="scores-row" id="scores-row"></div>
-
   <div class="section">
     <div class="section-header">
       <span class="section-title">🏝 Tribal Rosters</span>
@@ -206,12 +212,10 @@
     </div>
     <div class="teams-grid" id="teams-grid"></div>
   </div>
-
   <div class="section">
     <div class="section-header"><span class="section-title">⭕ Bonus Circles</span></div>
     <div class="bonus-list" id="bonus-list"></div>
   </div>
-
   <div class="section">
     <div class="section-header">
       <span class="section-title">🏆 Prize List</span>
@@ -239,12 +243,37 @@
     </div>
   </div>
 </div>
-<div class="save-notice" id="save-notice">Saved ✓</div>
+<div class="save-notice" id="save-notice">Synced ✓</div>
 
 <script>
-const STORAGE_KEY = 'survivor50_v3';
+// ── Firebase setup ────────────────────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyAUJtq2-BD_vs2mTEMaCVKhhE3jh-YGayo",
+  authDomain: "survivor50-576d3.firebaseapp.com",
+  databaseURL: "https://survivor50-576d3-default-rtdb.firebaseio.com",
+  projectId: "survivor50-576d3",
+  storageBucket: "survivor50-576d3.firebasestorage.app",
+  messagingSenderId: "589000856037",
+  appId: "1:589000856037:web:cfbc6a2b3d5c488ce6df0c",
+  measurementId: "G-WG1SB3DHZF"
+};
+firebase.initializeApp(firebaseConfig);
+const db  = firebase.database();
+const REF = db.ref('survivor50_v3');
 
-// Each prize costs exactly 1 circle. qty = how many of that thing you receive.
+// Show online/offline status
+db.ref('.info/connected').on('value', snap => {
+  const dot = document.getElementById('conn-dot');
+  if (snap.val()) {
+    dot.textContent = '⬤ Live';
+    dot.className = 'conn-dot online';
+  } else {
+    dot.textContent = '⬤ Offline';
+    dot.className = 'conn-dot offline';
+  }
+});
+
+// ── Static prize list ─────────────────────────────────────────────────────────
 const PRIZES = [
   {name:'Store run', qty:2},
   {name:'Movie pick', qty:2},
@@ -272,6 +301,7 @@ const PRIZES = [
   {name:'Chore swap', qty:1},
 ];
 
+// ── Default state (used only if Firebase has no data yet) ─────────────────────
 const DEFAULT_STATE = {
   contestants: {
     Rachel: [
@@ -299,45 +329,39 @@ const DEFAULT_STATE = {
     {id:'b5',desc:'Gender winner (Rachel = female, Jeremy = male)',circles:2,awarded:null},
     {id:'b6',desc:'Overall Survivor winner',circles:5,awarded:null},
   ],
-  // prizeClaims[i] = null | 'Rachel' | 'Jeremy'
   prizeClaims: {},
 };
 
-let state = loadState();
+// ── App state ─────────────────────────────────────────────────────────────────
+let state = null;
 let pendingAction = null;
 
-function loadState() {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) return JSON.parse(saved);
-  } catch(e) {}
-  return JSON.parse(JSON.stringify(DEFAULT_STATE));
-}
-
+// ── Save to Firebase (replaces localStorage) ──────────────────────────────────
 function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  REF.set(state);
   const n = document.getElementById('save-notice');
   n.classList.add('show');
   setTimeout(() => n.classList.remove('show'), 1800);
 }
 
+// ── Scoring helpers ───────────────────────────────────────────────────────────
 function getCircles(player) {
   return state.bonuses.filter(b => b.awarded === player).reduce((s,b) => s + b.circles, 0);
 }
-
 function getSpent(player) {
-  return Object.values(state.prizeClaims).filter(v => v === player).length;
+  return Object.values(state.prizeClaims || {}).filter(v => v === player).length;
 }
 
+// ── Render functions (unchanged from original) ────────────────────────────────
 function renderScores() {
   const row = document.getElementById('scores-row');
   row.innerHTML = '';
   ['Rachel','Jeremy'].forEach((p, i) => {
     const earned = getCircles(p);
-    const spent = getSpent(p);
-    const left = earned - spent;
-    const alive = state.contestants[p].filter(c => !c.out).length;
-    const card = document.createElement('div');
+    const spent  = getSpent(p);
+    const left   = earned - spent;
+    const alive  = state.contestants[p].filter(c => !c.out).length;
+    const card   = document.createElement('div');
     card.className = 'score-card ' + p.toLowerCase();
     card.innerHTML = `
       <div class="score-player">${p}</div>
@@ -360,7 +384,7 @@ function renderTeams() {
   const grid = document.getElementById('teams-grid');
   grid.innerHTML = '';
   ['Rachel','Jeremy'].forEach(player => {
-    const col = document.createElement('div');
+    const col   = document.createElement('div');
     col.className = 'team-col ' + player.toLowerCase();
     const alive = state.contestants[player].filter(c=>!c.out).length;
     col.innerHTML = `<div class="team-header"><span class="team-name">${player}</span><span class="alive-badge">${alive} alive</span></div>`;
@@ -382,15 +406,18 @@ function renderTeams() {
 function confirmToggle(player, idx) {
   const c = state.contestants[player][idx];
   const eliminating = !c.out;
-  pendingAction = () => { state.contestants[player][idx].out = eliminating; saveState(); render(); };
-  document.getElementById('modal-icon').textContent = eliminating ? '🔥' : '🌿';
+  pendingAction = () => {
+    state.contestants[player][idx].out = eliminating;
+    saveState();
+  };
+  document.getElementById('modal-icon').textContent  = eliminating ? '🔥' : '🌿';
   document.getElementById('modal-title').textContent = eliminating ? `Vote out ${c.name}?` : `Restore ${c.name}?`;
-  document.getElementById('modal-body').textContent = eliminating
+  document.getElementById('modal-body').textContent  = eliminating
     ? `The tribe has spoken. Mark ${c.name} as eliminated from ${player}'s team.`
     : `Bring ${c.name} back to ${player}'s active roster.`;
   const btn = document.getElementById('modal-confirm');
   btn.textContent = eliminating ? 'Vote Out' : 'Restore';
-  btn.className = eliminating ? 'btn-confirm-elim' : 'btn-confirm-restore';
+  btn.className   = eliminating ? 'btn-confirm-elim' : 'btn-confirm-restore';
   document.getElementById('modal').classList.add('open');
 }
 
@@ -398,6 +425,7 @@ function closeModal() {
   document.getElementById('modal').classList.remove('open');
   pendingAction = null;
 }
+
 document.getElementById('modal-confirm').onclick = () => { if (pendingAction) pendingAction(); closeModal(); };
 document.getElementById('modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
 
@@ -415,22 +443,19 @@ function renderBonuses() {
   });
 }
 
-function awardBonus(i, player) { state.bonuses[i].awarded = player; saveState(); render(); }
-function unawardBonus(i) { state.bonuses[i].awarded = null; saveState(); render(); }
+function awardBonus(i, player)  { state.bonuses[i].awarded = player; saveState(); }
+function unawardBonus(i)        { state.bonuses[i].awarded = null;   saveState(); }
 
 function renderPrizes() {
   const rLeft = getCircles('Rachel') - getSpent('Rachel');
   const jLeft = getCircles('Jeremy') - getSpent('Jeremy');
-  const grid = document.getElementById('prizes-grid');
+  const grid  = document.getElementById('prizes-grid');
   grid.innerHTML = '';
-
   PRIZES.forEach((p, i) => {
-    const claimed = state.prizeClaims[i] || null;
-    const item = document.createElement('div');
+    const claimed = (state.prizeClaims || {})[i] || null;
+    const item    = document.createElement('div');
     item.className = 'prize-item' + (claimed ? ` by-${claimed}` : '');
-
     const qtyLabel = p.qty > 1 ? `×${p.qty} &mdash; you get ${p.qty} of these` : 'one-time prize';
-
     let btns = '';
     if (claimed) {
       btns = `<button class="undo-btn" onclick="unclaimPrize(${i})">Undo</button>`;
@@ -440,7 +465,6 @@ function renderPrizes() {
       btns = `<button class="pclaim-btn pr" ${rDis} onclick="claimPrize(${i},'Rachel')">R</button>
               <button class="pclaim-btn pj" ${jDis} onclick="claimPrize(${i},'Jeremy')">J</button>`;
     }
-
     item.innerHTML = `
       <div class="prize-info">
         <span class="prize-name">${p.name}</span>
@@ -455,17 +479,30 @@ function renderPrizes() {
 function claimPrize(i, player) {
   const left = getCircles(player) - getSpent(player);
   if (left < 1) { alert('Not enough circles!'); return; }
+  if (!state.prizeClaims) state.prizeClaims = {};
   state.prizeClaims[i] = player;
-  saveState(); render();
+  saveState();
 }
-
 function unclaimPrize(i) {
   delete state.prizeClaims[i];
-  saveState(); render();
+  saveState();
 }
 
 function render() { renderScores(); renderTeams(); renderBonuses(); renderPrizes(); }
-render();
+
+// ── Real-time listener — this is the magic ────────────────────────────────────
+// Every time ANYONE saves, Firebase pushes the update to ALL open browsers instantly.
+REF.on('value', snapshot => {
+  const data = snapshot.val();
+  if (data) {
+    state = data;
+  } else {
+    // First ever load — push default state to Firebase
+    state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+    REF.set(state);
+  }
+  render();
+});
 </script>
 </body>
 </html>
